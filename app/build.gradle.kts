@@ -9,8 +9,11 @@ plugins {
 // Load keystore properties
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
+
 if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    FileInputStream(keystorePropertiesFile).use { input ->
+        keystoreProperties.load(input)
+    }
 }
 
 android {
@@ -19,8 +22,13 @@ android {
 
     defaultConfig {
         applicationId = "com.unixshells.devbrowser"
-        minSdk = 35
+
+        // Android 7.0+; includes Android 13
+        minSdk = 24
+
+        // Target Android 15
         targetSdk = 35
+
         versionCode = 3
         versionName = "0.1.0"
     }
@@ -39,10 +47,12 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
@@ -59,16 +69,9 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-
 }
 
-// DevTools frontend is pre-built from Chromium source and checked into
-// app/src/main/assets/devtools_frontend/. To rebuild it:
-//   1. Build devtools-frontend in your Chromium checkout:
-//      autoninja -C out/Release third_party/devtools-frontend/src/front_end
-//   2. Copy the built files:
-//      ./scripts/copy-devtools.sh
-
+// Dependencies
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
@@ -76,8 +79,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.webkit:webkit:1.9.0")
 
-    // NanoHTTPD for local HTTP server (serves DevTools frontend)
+    // NanoHTTPD: local HTTP server for DevTools frontend
     implementation("org.nanohttpd:nanohttpd:2.3.1")
     implementation("org.nanohttpd:nanohttpd-websocket:2.3.1")
-
 }
